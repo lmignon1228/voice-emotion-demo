@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>智能语音情绪识别与事中干预系统</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #080c1a;
+      font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    /* 呼吸光晕动画 */
+    @keyframes breath {
+      0%, 100% { box-shadow: 0 0 20px rgba(239,68,68,0.3), inset 0 0 40px rgba(239,68,68,0.05); }
+      50% { box-shadow: 0 0 60px rgba(239,68,68,0.7), 0 0 120px rgba(239,68,68,0.25), inset 0 0 60px rgba(239,68,68,0.1); }
+    }
+    .alert-breath {
+      animation: breath 1.8s ease-in-out infinite;
+    }
+    /* 边框流光 */
+    @keyframes borderGlow {
+      0%, 100% { border-color: rgba(239,68,68,0.3); }
+      50% { border-color: rgba(239,68,68,0.8); }
+    }
+    .border-pulse-red {
+      animation: borderGlow 1.8s ease-in-out infinite;
+    }
+    /* 卡片悬浮效果 */
+    .script-card {
+      transition: all 0.25s ease;
+    }
+    .script-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(59,130,246,0.2);
+      border-color: #3b82f6 !important;
+    }
+    .copy-hint {
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .script-card:hover .copy-hint {
+      opacity: 1;
+    }
+    /* 渐变文字 */
+    .gradient-text {
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    /* 自定义滚动条 */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== 顶栏 Header ==================== -->
+  <header class="bg-[#0e1428] border-b border-[#1e293b] px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">AI</div>
+      <div>
+        <h1 class="text-white text-xl font-bold tracking-wide">智能语音情绪识别与事中干预系统</h1>
+        <p class="text-[#64748b] text-xs mt-0.5">Real‑time Emotion Recognition & Intervention Platform</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-8">
+      <div class="flex items-center gap-3 text-sm">
+        <span class="text-[#64748b]">坐席工号</span>
+        <span class="text-white font-semibold bg-[#1e293b] px-3 py-1 rounded-md">9527</span>
+      </div>
+      <div class="flex items-center gap-3 text-sm">
+        <span class="text-[#64748b]">客户</span>
+        <span class="text-white font-semibold">张总</span>
+      </div>
+      <div class="flex items-center gap-2 text-sm bg-[#1e293b] px-4 py-1.5 rounded-full">
+        <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+        <span class="text-[#94a3b8]">通话中</span>
+        <span id="callTimer" class="text-cyan-400 font-mono font-bold text-base ml-1">00:00</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== 主体布局 ==================== -->
+  <main class="p-4 flex flex-col gap-4" style="height: calc(100vh - 80px);">
+
+    <!-- 上：三个核心面板 -->
+    <div class="flex gap-4 flex-1">
+
+      <!-- ========== 左侧：情绪实时可视化面板 (40%) ========== -->
+      <section class="w-[40%] bg-[#0e1428] rounded-xl border border-[#1e293b] flex flex-col overflow-hidden">
+        <div class="px-5 py-3 border-b border-[#1e293b] flex items-center justify-between">
+          <h2 class="text-white font-semibold text-sm flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+            实时通话情绪波动曲线
+          </h2>
+          <span class="text-[#64748b] text-xs">情绪等级 1‑5 级</span>
+        </div>
+        <div id="emotionChart" class="flex-1 w-full" style="min-height:0;"></div>
+      </section>
+
+      <!-- ========== 中间：状态预警与控制区 (30%) ========== -->
+      <section class="w-[30%] bg-[#0e1428] rounded-xl border border-[#1e293b] flex flex-col overflow-hidden">
+        <div class="px-5 py-3 border-b border-[#1e293b]">
+          <h2 class="text-white font-semibold text-sm flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-red-400"></span>
+            当前通话风险状态
+          </h2>
+        </div>
+        <div class="flex-1 flex flex-col items-center justify-center p-5 gap-4">
+          <!-- 等级标签 -->
+          <div class="alert-breath rounded-2xl border-2 border-pulse-red bg-[#1a0a0a] px-8 py-4 text-center w-full">
+            <div class="text-[#fca5a5] text-xs font-medium tracking-widest uppercase mb-1">RISK LEVEL</div>
+            <div class="text-red-500 text-6xl font-black tracking-tighter">5</div>
+            <div class="text-red-400 text-lg font-bold mt-1">暴怒失控</div>
+          </div>
+          <!-- 警告语 -->
+          <div class="bg-[#1a0a0a] border border-[#450a0a] rounded-lg px-4 py-3 w-full">
+            <p class="text-red-400 text-sm font-bold text-center leading-relaxed">
+              【紧急风险预警】客户情绪突变峰值极高，<br>
+              语音急促高声斥责！系统已同步推送<br>
+              主管监听介入！提示坐席：<span class="text-yellow-400">优先安抚，禁止争辩</span>！
+            </p>
+          </div>
+          <!-- 操作建议 -->
+          <div class="flex gap-2 w-full">
+            <button class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg text-sm transition">转接资深坐席</button>
+            <button class="flex-1 bg-[#1e293b] hover:bg-[#334155] text-[#94a3b8] font-bold py-2 rounded-lg text-sm transition">延后回电</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== 右侧：智能安抚话术推荐墙 (30%) ========== -->
+      <section class="w-[30%] bg-[#0e1428] rounded-xl border border-[#1e293b] flex flex-col overflow-hidden">
+        <div class="px-5 py-3 border-b border-[#1e293b]">
+          <h2 class="text-white font-semibold text-sm flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-violet-400"></span>
+            实时辅助话术推荐（针对 5 级暴怒）
+          </h2>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-3">
+          <!-- 话术卡 1 -->
+          <div class="script-card bg-[#131b2f] border border-[#1e293b] rounded-lg p-4 relative cursor-pointer group"
+               onclick="copyScript(this)" title="点击复制">
+            <div class="flex items-start gap-3">
+              <span class="text-cyan-400 text-xs font-bold bg-cyan-400/10 rounded px-2 py-0.5 mt-0.5 shrink-0">共情降温</span>
+              <p class="text-[#cbd5e1] text-sm leading-relaxed">非常抱歉给您带来如此不便，我完全理解您现在的焦急心情，请您放心，我这边立即为您开通绿色通道加急处理，第一时间给您反馈结果。</p>
+            </div>
+            <div class="copy-hint absolute top-2 right-2 text-[#64748b] text-xs flex items-center gap-1 bg-[#0e1428] px-2 py-1 rounded">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              复制
+            </div>
+          </div>
+          <!-- 话术卡 2 -->
+          <div class="script-card bg-[#131b2f] border border-[#1e293b] rounded-lg p-4 relative cursor-pointer group"
+               onclick="copyScript(this)" title="点击复制">
+            <div class="flex items-start gap-3">
+              <span class="text-yellow-400 text-xs font-bold bg-yellow-400/10 rounded px-2 py-0.5 mt-0.5 shrink-0">缓和引导</span>
+              <p class="text-[#cbd5e1] text-sm leading-relaxed">您反映的问题确实是我们服务不到位，非常感谢您的监督。请问在加急处理期间，我先为您登记最紧急的诉求，确保不漏掉任何一个细节，您看可以吗？</p>
+            </div>
+            <div class="copy-hint absolute top-2 right-2 text-[#64748b] text-xs flex items-center gap-1 bg-[#0e1428] px-2 py-1 rounded">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              复制
+            </div>
+          </div>
+          <!-- 话术卡 3 -->
+          <div class="script-card bg-[#131b2f] border border-[#1e293b] rounded-lg p-4 relative cursor-pointer group"
+               onclick="copyScript(this)" title="点击复制">
+            <div class="flex items-start gap-3">
+              <span class="text-green-400 text-xs font-bold bg-green-400/10 rounded px-2 py-0.5 mt-0.5 shrink-0">承诺行动</span>
+              <p class="text-[#cbd5e1] text-sm leading-relaxed">我已经将您的情况升级为最高优先级工单，由我本人全程跟进直到问题解决。每半小时我会主动向您同步一次处理进度，请不必反复致电。</p>
+            </div>
+            <div class="copy-hint absolute top-2 right-2 text-[#64748b] text-xs flex items-center gap-1 bg-[#0e1428] px-2 py-1 rounded">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              复制
+            </div>
+          </div>
+          <!-- 话术卡 4 -->
+          <div class="script-card bg-[#131b2f] border border-[#1e293b] rounded-lg p-4 relative cursor-pointer group"
+               onclick="copyScript(this)" title="点击复制">
+            <div class="flex items-start gap-3">
+              <span class="text-pink-400 text-xs font-bold bg-pink-400/10 rounded px-2 py-0.5 mt-0.5 shrink-0">转接铺垫</span>
+              <p class="text-[#cbd5e1] text-sm leading-relaxed">为了更高效地解决您的问题，我为您申请到了我们资深业务主管直接对接，她对您这类问题有丰富的处理经验，接下来由她亲自为您服务，您看现在可以接入吗？</p>
+            </div>
+            <div class="copy-hint absolute top-2 right-2 text-[#64748b] text-xs flex items-center gap-1 bg-[#0e1428] px-2 py-1 rounded">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              复制
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ========== 底栏：离线客户画像看板 ========== -->
+    <div class="bg-[#0e1428] rounded-xl border border-[#1e293b] px-5 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+        <span class="text-white text-sm font-semibold">离线客户画像看板</span>
+        <span class="text-[#64748b] text-xs ml-2">基于历史通话数据离线挖掘 · 前置赋能实时干预</span>
+      </div>
+      <div class="flex items-center gap-8">
+        <div class="text-center">
+          <div class="text-[#64748b] text-xs mb-0.5">客户姓名</div>
+          <div class="text-white font-bold">张总</div>
+        </div>
+        <div class="w-px h-8 bg-[#1e293b]"></div>
+        <div class="text-center">
+          <div class="text-[#64748b] text-xs mb-0.5">性格标签</div>
+          <div class="flex gap-1.5">
+            <span class="text-xs bg-cyan-400/10 text-cyan-400 font-medium px-2 py-0.5 rounded">强势型</span>
+            <span class="text-xs bg-violet-400/10 text-violet-400 font-medium px-2 py-0.5 rounded">敏感型</span>
+          </div>
+        </div>
+        <div class="w-px h-8 bg-[#1e293b]"></div>
+        <div class="text-center">
+          <div class="text-[#64748b] text-xs mb-0.5">历史通话质量评分</div>
+          <div class="text-green-400 font-bold text-lg">85<span class="text-xs text-[#64748b]">分</span></div>
+        </div>
+        <div class="w-px h-8 bg-[#1e293b]"></div>
+        <div class="text-center">
+          <div class="text-[#64748b] text-xs mb-0.5">最优沟通时长</div>
+          <div class="text-amber-400 font-bold text-lg">5<span class="text-xs text-[#64748b]">分钟</span></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ==================== JavaScript ==================== -->
+  <script>
+    /* ========== 1. 通话计时器 ========== */
+    (function() {
+      const el = document.getElementById('callTimer');
+      let sec = 225; // 03:45
+      el.textContent = formatTime(sec);
+      setInterval(() => {
+        sec++;
+        el.textContent = formatTime(sec);
+      }, 1000);
+      function formatTime(s) {
+        const m = String(Math.floor(s / 60)).padStart(2, '0');
+        const secs = String(s % 60).padStart(2, '0');
+        return m + ':' + secs;
+      }
+    })();
+
+    /* ========== 2. ECharts 情绪折线图 ========== */
+    (function() {
+      const dom = document.getElementById('emotionChart');
+      const chart = echarts.init(dom, 'dark');
+
+      // 模拟通话 90s 情绪数据（等级 1-5）
+      const timeLabels = ['00:00','00:05','00:10','00:15','00:20','00:25','00:30','00:35','00:40','00:45','00:50','00:55','01:00','01:05','01:10','01:15','01:20','01:25','01:30'];
+      const emotionData = [1.0, 1.2, 1.5, 1.8, 2.0, 2.3, 2.5, 2.8, 3.0, 3.2, 3.5, 3.8, 4.0, 4.2, 4.5, 4.7, 4.9, 5.0, 5.0];
+
+      // 拐点标记
+      const markPoints = [
+        { name: '轻微不满', coord: ['00:15', 1.8], symbolSize: 48 },
+        { name: '情绪持续上升', coord: ['00:35', 2.8], symbolSize: 48 },
+        { name: '明显烦躁', coord: ['00:55', 3.8], symbolSize: 48 },
+        { name: '生气抵触', coord: ['01:15', 4.7], symbolSize: 48 },
+        { name: '暴怒失控 ⚠️', coord: ['01:25', 5.0], symbolSize: 56, itemStyle: { color: '#ef4444' } },
+      ];
+
+      const option = {
+        tooltip: {
+          trigger: 'axis',
+          backgroundColor: 'rgba(15,23,42,0.9)',
+          borderColor: '#1e293b',
+          textStyle: { color: '#e2e8f0', fontSize: 12 },
+          formatter: function(params) {
+            const p = params[0];
+            const level = p.value;
+            let label = '';
+            if (level <= 1.5) label = '平静愉悦';
+            else if (level <= 2.5) label = '轻微不满';
+            else if (level <= 3.5) label = '明显烦躁';
+            else if (level <= 4.5) label = '生气抵触';
+            else label = '暴怒失控';
+            return `<div style="font-weight:600;margin-bottom:4px;">${p.axisValue}</div>情绪等级：${level.toFixed(1)} 级 — ${label}`;
+          }
+        },
+        grid: { left: '3%', right: '3%', top: '8%', bottom: '10%' },
+        xAxis: {
+          type: 'category',
+          data: timeLabels,
+          axisLine: { lineStyle: { color: '#1e293b' } },
+          axisLabel: { color: '#64748b', fontSize: 10, interval: 2 },
+          splitLine: { show: false },
+        },
+        yAxis: {
+          type: 'value',
+          min: 0.5,
+          max: 5.5,
+          splitNumber: 5,
+          axisLine: { show: false },
+          axisLabel: {
+            color: '#64748b',
+            fontSize: 10,
+            formatter: function(v) {
+              const map = {1:'1 平静',2:'2 不满',3:'3 烦躁',4:'4 生气',5:'5 暴怒'};
+              return map[v] || v;
+            }
+          },
+          splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } },
+        },
+        series: [{
+          type: 'line',
+          data: emotionData,
+          smooth: true,
+          symbol: 'circle',
+          symbolSize: 6,
+          lineStyle: {
+            width: 3,
+            color: '#3b82f6',
+          },
+          areaStyle: {
+            color: {
+              type: 'linear',
+              x: 0, y: 0, x2: 0, y2: 1,
+              colorStops: [
+                { offset: 0, color: 'rgba(59,130,246,0.45)' },
+                { offset: 0.5, color: 'rgba(239,68,68,0.2)' },
+                { offset: 1, color: 'rgba(239,68,68,0.02)' },
+              ]
+            }
+          },
+          markPoint: {
+            data: markPoints.map(m => ({
+              name: m.name,
+              coord: m.coord,
+              value: m.coord[1],
+              symbol: 'pin',
+              symbolSize: m.symbolSize,
+              itemStyle: m.itemStyle || { color: '#f59e0b' },
+              label: {
+                color: '#fff',
+                fontSize: 10,
+                fontWeight: 'bold',
+                formatter: m.name,
+              }
+            })),
+            symbol: 'pin',
+            symbolSize: 48,
+            itemStyle: { color: '#f59e0b' },
+            label: {
+              color: '#fff',
+              fontSize: 10,
+              fontWeight: 'bold',
+            }
+          },
+          markLine: {
+            silent: true,
+            data: [
+              { yAxis: 3, lineStyle: { color: '#f59e0b', type: 'dashed', width: 1 }, label: { formatter: '烦躁阈值', color: '#f59e0b', fontSize: 10 } },
+              { yAxis: 5, lineStyle: { color: '#ef4444', type: 'dashed', width: 1 }, label: { formatter: '暴怒阈值', color: '#ef4444', fontSize: 10 } },
+            ]
+          }
+        }]
+      };
+
+      chart.setOption(option);
+
+      // 响应式
+      window.addEventListener('resize', () => chart.resize());
+      // 观测父容器变化
+      const ro = new ResizeObserver(() => chart.resize());
+      ro.observe(dom);
+    })();
+
+    /* ========== 3. 复制话术 ========== */
+    function copyScript(el) {
+      const text = el.querySelector('p').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const hint = el.querySelector('.copy-hint');
+        const orig = hint.innerHTML;
+        hint.innerHTML = '<span class="text-green-400 text-xs">已复制 ✓</span>';
+        setTimeout(() => { hint.innerHTML = orig; }, 1200);
+      }).catch(() => {
+        // fallback
+        const range = document.createRange();
+        range.selectNodeContents(el.querySelector('p'));
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        document.execCommand('copy');
+        sel.removeAllRanges();
+      });
+    }
+  </script>
+
+</body>
+</html>
