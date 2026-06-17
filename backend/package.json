@@ -1,0 +1,12 @@
+{
+  "name": "voice-emotion-websocket-server",
+  "version": "1.0.0",
+  "description": "轻量级 WebSocket 服务器，模拟实时通话情绪数据推送",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  }
+}
