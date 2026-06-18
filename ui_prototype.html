@@ -8,12 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: #080c1a;
-      font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+    body { background: #080c1a; font-family: 'Inter','PingFang SC','Microsoft YaHei',sans-serif; min-height: 100vh; overflow-x: hidden; }
     @keyframes breath {
       0%, 100% { box-shadow: 0 0 20px rgba(239,68,68,0.3), inset 0 0 40px rgba(239,68,68,0.05); }
       50% { box-shadow: 0 0 60px rgba(239,68,68,0.7), 0 0 120px rgba(239,68,68,0.25), inset 0 0 60px rgba(239,68,68,0.1); }
@@ -35,40 +30,17 @@
     }
     .border-pulse-red { animation: borderGlow 1.8s ease-in-out infinite; }
     .script-card { transition: all 0.25s ease; }
-    .script-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 30px rgba(59,130,246,0.2);
-      border-color: #3b82f6 !important;
-    }
+    .script-card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(59,130,246,0.2); border-color: #3b82f6 !important; }
     .copy-hint { opacity: 0; transition: opacity 0.2s ease; }
     .script-card:hover .copy-hint { opacity: 1; }
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: #0f172a; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-    .modal-overlay {
-      position: fixed; inset: 0; z-index: 100;
-      background: rgba(4,6,16,0.85); backdrop-filter: blur(16px);
-      display: flex; align-items: center; justify-content: center;
-    }
+    .modal-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(4,6,16,0.85); backdrop-filter: blur(16px); display: flex; align-items: center; justify-content: center; }
     .modal-overlay.hidden { display: none; }
-    .modal-box {
-      background: linear-gradient(145deg, #0e1428, #121a30);
-      border: 1px solid #1e293b; border-radius: 20px;
-      width: 820px; max-height: 88vh; overflow-y: auto;
-      padding: 36px 40px; box-shadow: 0 0 80px rgba(59,130,246,0.08);
-    }
-    .customer-avatar-lg {
-      width: 64px; height: 64px; border-radius: 16px;
-      background: linear-gradient(135deg, #1e293b, #0f172a);
-      border: 2px solid #334155; display: flex; align-items: center; justify-content: center;
-      font-size: 26px; font-weight: 800; color: #94a3b8;
-    }
-    .customer-avatar-sm {
-      width: 44px; height: 44px; border-radius: 12px; border: 2px solid transparent;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px; font-weight: 700; color: #94a3b8; cursor: pointer;
-      transition: all 0.2s ease; background: #131b2f;
-    }
+    .modal-box { background: linear-gradient(145deg,#0e1428,#121a30); border: 1px solid #1e293b; border-radius: 20px; width: 820px; max-height: 88vh; overflow-y: auto; padding: 36px 40px; box-shadow: 0 0 80px rgba(59,130,246,0.08); }
+    .customer-avatar-lg { width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg,#1e293b,#0f172a); border: 2px solid #334155; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 800; color: #94a3b8; }
+    .customer-avatar-sm { width: 44px; height: 44px; border-radius: 12px; border: 2px solid transparent; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #94a3b8; cursor: pointer; transition: all 0.2s ease; background: #131b2f; }
     .customer-avatar-sm:hover { border-color: #3b82f6; background: #1a2540; color: #fff; }
     .customer-avatar-sm.active { border-color: #3b82f6; background: #1a2540; color: #60a5fa; }
     .eval-panel { transition: all 0.4s ease; }
@@ -79,6 +51,7 @@
     .score-ring circle { fill: none; stroke-width: 6; }
     .score-ring .bg { stroke: #1e293b; }
     .score-ring .fg { stroke-linecap: round; transition: stroke-dashoffset 1s ease, stroke 0.5s ease; }
+    #transcriptScroll { scroll-behavior: smooth; }
   </style>
 </head>
 <body>
@@ -124,7 +97,7 @@
           <span class="text-white font-semibold bg-[#1e293b] px-3 py-1 rounded-md">9527</span>
         </div>
         <div id="callStatusBadge" class="flex items-center gap-2 text-sm bg-[#1e293b] px-4 py-1.5 rounded-full">
-          <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+          <span id="statusDot" class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
           <span class="text-[#94a3b8]">通话中</span>
           <span id="callTimer" class="text-cyan-400 font-mono font-bold text-base ml-1">00:00</span>
         </div>
@@ -135,7 +108,7 @@
     <main class="p-4 flex flex-col gap-4" style="height: calc(100vh - 80px);">
       <div class="flex gap-4 flex-1" style="min-height:0;">
 
-        <!-- 左侧：情绪实时可视化 -->
+        <!-- 左侧：情绪实时可视化 (40%) -->
         <section class="w-[40%] bg-[#0e1428] rounded-xl border border-[#1e293b] flex flex-col overflow-hidden">
           <div class="px-5 py-3 border-b border-[#1e293b] flex items-center justify-between">
             <h2 class="text-white font-semibold text-sm flex items-center gap-2">
@@ -146,19 +119,39 @@
           <div id="emotionChart" class="flex-1 w-full" style="min-height:0;"></div>
         </section>
 
-        <!-- 中间：状态预警 -->
+        <!-- 中间：状态预警 + 通话文本 (30%) -->
         <section class="w-[30%] bg-[#0e1428] rounded-xl border border-[#1e293b] flex flex-col overflow-hidden">
           <div class="px-5 py-3 border-b border-[#1e293b]">
             <h2 class="text-white font-semibold text-sm flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-red-400" id="riskDot"></span>当前通话风险状态
+              <span id="riskDot" class="w-2 h-2 rounded-full bg-green-400"></span>当前通话风险状态
             </h2>
           </div>
-          <div id="riskPanel" class="flex-1 flex flex-col items-center justify-center p-5 gap-4">
-            <!-- 动态 JS 渲染 -->
+          <!-- 风险等级 -->
+          <div id="riskPanel" class="px-5 pt-4 pb-2">
+            <div id="riskBadge" class="rounded-xl border border-[#1e293b] bg-[#0a0f1f] px-4 py-3 text-center">
+              <div class="text-[#64748b] text-xs font-medium tracking-widest uppercase mb-1">EMOTION LEVEL</div>
+              <div id="riskLevelDisplay" class="text-[#64748b] text-5xl font-black tracking-tighter">--</div>
+              <div id="riskLabelDisplay" class="text-[#64748b] text-sm font-medium mt-0.5">等待数据...</div>
+            </div>
+          </div>
+          <!-- 通话文本 -->
+          <div class="px-5 py-2">
+            <div class="flex items-center gap-2 mb-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+              <span class="text-[#64748b] text-[11px] font-medium">实时通话文本 / 录音转写</span>
+            </div>
+            <div id="transcriptScroll" class="bg-[#0a0f1f] border border-[#1e293b] rounded-lg px-3 py-2.5 h-[110px] overflow-y-auto">
+              <p id="transcriptText" class="text-[#64748b] text-xs leading-relaxed">等待后端数据接入...</p>
+            </div>
+          </div>
+          <!-- 操作按钮 -->
+          <div class="px-5 pb-4 pt-1 mt-auto flex gap-2">
+            <button class="flex-1 bg-[#1e293b] hover:bg-[#334155] text-[#94a3b8] font-bold py-2 rounded-lg text-sm transition">转接资深坐席</button>
+            <button class="flex-1 bg-[#1e293b] hover:bg-[#334155] text-[#94a3b8] font-bold py-2 rounded-lg text-sm transition">延后回电</button>
           </div>
         </section>
 
-        <!-- 右侧：话术推荐 -->
+        <!-- 右侧：话术推荐 (30%) -->
         <section class="w-[30%] bg-[#0e1428] rounded-xl border border-[#1e293b] flex flex-col overflow-hidden">
           <div class="px-5 py-3 border-b border-[#1e293b]">
             <h2 id="scriptPanelTitle" class="text-white font-semibold text-sm flex items-center gap-2">
@@ -166,7 +159,7 @@
             </h2>
           </div>
           <div id="scriptPanel" class="flex-1 overflow-y-auto p-4 space-y-3">
-            <!-- 动态 JS 渲染 -->
+            <div class="flex items-center justify-center h-full text-[#64748b] text-xs">等待后端数据接入...</div>
           </div>
         </section>
       </div>
@@ -192,7 +185,7 @@
         </button>
 
         <div id="evalPanel" class="eval-panel collapsed bg-[#0e1428] border border-[#1e293b] rounded-xl px-5 overflow-hidden">
-          <div id="evalContent" class="py-5"><!-- 动态 JS --></div>
+          <div id="evalContent" class="py-5"></div>
         </div>
       </div>
     </main>
@@ -200,161 +193,39 @@
 
   <script>
     // ======================================================================
-    // 客户数据集 — 千人千面，每位客户的情绪走势、风险、话术、评价均不同
+    // 客户数据集
     // ======================================================================
     const customers = [
-      {
-        id: 'zhang', name: '张总', avatar: '张',
-        tags: ['强势型','敏感型'], score: 85, duration: 5,
-        color: 'from-cyan-500 to-blue-600',
-        // 情绪曲线数据
-        emotion: {
-          timeLabels: ['00:00','00:05','00:10','00:15','00:20','00:25','00:30','00:35','00:40','00:45','00:50','00:55','01:00','01:05','01:10','01:15','01:20','01:25','01:30'],
-          data: [1.0, 1.3, 1.8, 2.2, 2.5, 2.8, 3.0, 3.2, 3.5, 3.8, 4.0, 4.0, 4.2, 4.3, 4.5, 4.5, 4.3, 4.0, 3.8],
-          marks: [
-            { name: '轻微不满', coord: ['00:15', 2.2], symbolSize: 44 },
-            { name: '持续上升', coord: ['00:30', 3.0], symbolSize: 44 },
-            { name: '明显烦躁', coord: ['00:45', 3.8], symbolSize: 44 },
-            { name: '生气抵触 ⚠️', coord: ['01:10', 4.5], symbolSize: 52, itemStyle: { color: '#ef4444' } },
-          ],
-          peakLevel: 4.5,
-        },
-        risk: { level: 4, label: '生气抵触', color: 'red' },
-        warning: '【三级风险预警】客户对抗情绪显著，音量骤升、语调尖锐！请立即执行「优先安抚 · 禁止争辩」，已自动锁定推销话术！',
-        scripts: [
-          { tag: '强制安抚', color: 'text-red-400 bg-red-400/10', text: '您说得对，这确实是我们做得不到位，我代表公司向您真诚道歉。我现在就为您升级处理，请给我一个机会帮您解决。' },
-          { tag: '禁止争辩', color: 'text-yellow-400 bg-yellow-400/10', text: '您提的意见非常宝贵，我已经全部记录下来并反馈给相关部门负责人，今天下班前一定给您一个明确答复。' },
-          { tag: '锁定话术', color: 'text-cyan-400 bg-cyan-400/10', text: '为了最快解决您的问题，我为您申请了一对一专属客服通道，后续由我全程跟进，您有任何问题可以直接联系我。' },
-        ],
-        eval: {
-          score: 68, stability: 45, speed: 72, empathy: 35, accuracy: 60,
-          stabilityLabel: '偏低', speedLabel: '良好', empathyLabel: '偏慢', accuracyLabel: '待提升',
-          stabilityColor: 'red', speedColor: 'green', empathyColor: 'red', accuracyColor: 'orange',
-          issue: '客户情绪升至 4 级时未及时使用「强制安抚」话术，导致对抗情绪持续 40s 未缓解。',
-          suggestion: '当系统触发三级风险预警时，必须立即使用「强制安抚」话术模板。本月已出现 3 次同类问题，请参加下周二专项话术培训。',
-        },
-        preStrategy: '客户性格强势敏感，建议以尊重、倾听为主，避免直接反驳。历史数据显示前 3 分钟为情绪稳定期，请尽量在此窗口内完成核心诉求沟通。如出现质疑语气，立即使用共情话术降温。',
-      },
-      {
-        id: 'li', name: '李女士', avatar: '李',
-        tags: ['谨慎型','耐心型'], score: 92, duration: 8,
-        color: 'from-violet-500 to-purple-600',
-        emotion: {
-          timeLabels: ['00:00','00:10','00:20','00:30','00:40','00:50','01:00','01:10','01:20','01:30','01:40','01:50','02:00','02:10','02:20','02:30','02:40','02:50','03:00'],
-          data: [1.0, 1.0, 1.2, 1.5, 1.3, 1.2, 1.0, 1.0, 1.2, 1.5, 1.8, 1.5, 1.2, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-          marks: [
-            { name: '轻微波动', coord: ['00:30', 1.5], symbolSize: 40 },
-            { name: '短暂疑惑', coord: ['01:00', 1.0], symbolSize: 40 },
-            { name: '轻微质疑', coord: ['01:40', 1.8], symbolSize: 40 },
-            { name: '已平复', coord: ['02:20', 1.0], symbolSize: 40, itemStyle: { color: '#22c55e' } },
-          ],
-          peakLevel: 1.8,
-        },
-        risk: { level: 1, label: '平静愉悦', color: 'green' },
-        warning: '【状态正常】客户语速、音量平稳，无负面语义，情绪波动值趋近于 0。请正常推进业务，主动引导客户表达诉求。',
-        scripts: [
-          { tag: '引导话术', color: 'text-cyan-400 bg-cyan-400/10', text: '感谢您的来电，请问今天有什么可以帮到您的？我会全程为您服务，请放心。' },
-          { tag: '确认话术', color: 'text-green-400 bg-green-400/10', text: '好的，您说的这个情况我已经完全了解了，我来为您核实一下具体信息，请稍等。' },
-          { tag: '节奏话术', color: 'text-blue-400 bg-blue-400/10', text: '您放心，这个问题的处理流程是这样的，我先为您梳理一遍，有任何疑问您随时提出。' },
-        ],
-        eval: {
-          score: 88, stability: 92, speed: 85, empathy: 78, accuracy: 90,
-          stabilityLabel: '优秀', speedLabel: '良好', empathyLabel: '良好', accuracyLabel: '优秀',
-          stabilityColor: 'green', speedColor: 'green', empathyColor: 'green', accuracyColor: 'green',
-          issue: '整体表现优秀。建议在客户出现「轻微质疑」时更主动地给予确认反馈，可进一步提升客户信任感。',
-          suggestion: '客户属于谨慎型人格，适当放慢语速、在每个信息节点后主动确认「您看我这样解释清楚吗」，可有效提升沟通效率。',
-        },
-        preStrategy: '客户谨慎耐心，适合循序渐进式沟通。历史数据表明其注意力持续 8 分钟，可适当放慢语速给予思考时间。反问句式出现时主动停顿等待回应。',
-      },
-      {
-        id: 'wang', name: '王经理', avatar: '王',
-        tags: ['直爽型','高效型'], score: 78, duration: 4,
-        color: 'from-amber-500 to-orange-600',
-        emotion: {
-          timeLabels: ['00:00','00:05','00:10','00:15','00:20','00:25','00:30','00:35','00:40','00:45','00:50','00:55','01:00','01:05','01:10','01:15','01:20','01:25','01:30'],
-          data: [1.0, 1.0, 1.2, 1.5, 2.0, 2.2, 2.0, 1.8, 1.5, 1.2, 1.0, 1.0, 1.0, 1.2, 1.5, 1.2, 1.0, 1.0, 1.0],
-          marks: [
-            { name: '轻微质疑', coord: ['00:20', 2.0], symbolSize: 44 },
-            { name: '已回落', coord: ['00:50', 1.0], symbolSize: 40, itemStyle: { color: '#22c55e' } },
-          ],
-          peakLevel: 2.2,
-        },
-        risk: { level: 2, label: '轻微不满', color: 'amber' },
-        warning: '【一级弹窗预警】客户语速微快，出现轻微质疑语句。请主动放缓语速、解答疑问，提前共情防止情绪升级。',
-        scripts: [
-          { tag: '放缓话术', color: 'text-amber-400 bg-amber-400/10', text: '您提的这个问题非常关键，我来为您详细解释一下，您看这样理解是否更清楚？' },
-          { tag: '共情话术', color: 'text-cyan-400 bg-cyan-400/10', text: '我完全理解您的顾虑，换做是我也会有同样的疑问。您放心，这个问题我们有标准的处理方案。' },
-          { tag: '确认话术', color: 'text-green-400 bg-green-400/10', text: '请问您对这个处理方案满意吗？如果有其他需求您一并告诉我，我一起帮您处理。' },
-        ],
-        eval: {
-          score: 76, stability: 70, speed: 65, empathy: 72, accuracy: 80,
-          stabilityLabel: '中等', speedLabel: '偏快', empathyLabel: '中等', accuracyLabel: '良好',
-          stabilityColor: 'amber', speedColor: 'amber', empathyColor: 'amber', accuracyColor: 'green',
-          issue: '王经理偏好高效沟通，坐席语速偏快导致客户出现轻微不耐烦。建议降低语速、减少冗余信息。',
-          suggestion: '客户属于直爽型，沟通应直奔主题。建议在开场 30s 内说明来意，避免寒暄。前 2 分钟为高效窗口，请把控节奏。',
-        },
-        preStrategy: '客户直爽高效，追求结果导向。建议开门见山，直奔主题。前 2 分钟为高效沟通窗口，避免寒暄和冗余信息。',
-      },
-      {
-        id: 'chen', name: '陈先生', avatar: '陈',
-        tags: ['敏感型','情绪型'], score: 65, duration: 3,
-        color: 'from-rose-500 to-pink-600',
-        emotion: {
-          timeLabels: ['00:00','00:05','00:10','00:15','00:20','00:25','00:30','00:35','00:40','00:45','00:50','00:55','01:00','01:05','01:10','01:15','01:20','01:25','01:30'],
-          data: [2.0, 2.5, 3.0, 3.5, 4.0, 4.2, 4.5, 4.8, 5.0, 5.0, 5.0, 4.8, 4.5, 4.0, 3.5, 3.0, 2.5, 2.0, 1.5],
-          marks: [
-            { name: '开始烦躁', coord: ['00:10', 3.0], symbolSize: 44 },
-            { name: '明显生气', coord: ['00:25', 4.2], symbolSize: 44 },
-            { name: '暴怒失控 ⚠️', coord: ['00:40', 5.0], symbolSize: 56, itemStyle: { color: '#ef4444' } },
-            { name: '逐渐平复', coord: ['01:10', 3.5], symbolSize: 44, itemStyle: { color: '#22c55e' } },
-          ],
-          peakLevel: 5.0,
-        },
-        risk: { level: 5, label: '暴怒失控', color: 'red' },
-        warning: '【最高级紧急预警】客户情绪突变峰值极高，语音急促高声斥责！系统已同步推送主管监听介入！提示坐席：优先安抚，禁止争辩！',
-        scripts: [
-          { tag: '共情降温', color: 'text-cyan-400 bg-cyan-400/10', text: '非常抱歉给您带来如此不便，我完全理解您现在的焦急心情，请您放心，我这边立即为您开通绿色通道加急处理，第一时间给您反馈结果。' },
-          { tag: '缓和引导', color: 'text-yellow-400 bg-yellow-400/10', text: '您反映的问题确实是我们服务不到位，非常感谢您的监督。请问在加急处理期间，我先为您登记最紧急的诉求，确保不漏掉任何一个细节。' },
-          { tag: '承诺行动', color: 'text-green-400 bg-green-400/10', text: '我已经将您的情况升级为最高优先级工单，由我本人全程跟进直到问题解决。每半小时我会主动向您同步一次处理进度。' },
-          { tag: '转接铺垫', color: 'text-pink-400 bg-pink-400/10', text: '为了更高效地解决您的问题，我为您申请到了资深业务主管直接对接，她对您这类问题有丰富的处理经验，接下来由她亲自为您服务。' },
-        ],
-        eval: {
-          score: 52, stability: 20, speed: 45, empathy: 38, accuracy: 55,
-          stabilityLabel: '差', speedLabel: '偏慢', empathyLabel: '差', accuracyLabel: '待提升',
-          stabilityColor: 'red', speedColor: 'red', empathyColor: 'red', accuracyColor: 'orange',
-          issue: '客户从 2 级跃升至 5 级仅用时 25s，坐席未在 3 级预警触发时及时使用安抚话术，错过最佳干预窗口。',
-          suggestion: '陈先生属于高敏感情绪型客户，临界时长仅 3 分钟。系统触发 3 级预警时必须立即执行共情话术，未来类似客户建议提前转接资深坐席。',
-        },
-        preStrategy: '客户情绪敏感度高，极易被触发负面情绪。建议全程使用温和语气，音量保持平稳。历史显示其临界时长为 3 分钟，请严格控制通话节奏。',
-      },
-      {
-        id: 'liu', name: '刘小姐', avatar: '刘',
-        tags: ['温和型','配合型'], score: 95, duration: 10,
-        color: 'from-emerald-500 to-green-600',
-        emotion: {
-          timeLabels: ['00:00','00:10','00:20','00:30','00:40','00:50','01:00','01:10','01:20','01:30','01:40','01:50','02:00','02:10','02:20','02:30','02:40','02:50','03:00'],
-          data: [1.0, 1.0, 1.0, 1.0, 1.0, 1.2, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-          marks: [
-            { name: '全程稳定 ✅', coord: ['01:30', 1.0], symbolSize: 44, itemStyle: { color: '#22c55e' } },
-          ],
-          peakLevel: 1.2,
-        },
-        risk: { level: 1, label: '平静愉悦', color: 'green' },
-        warning: '【状态正常】客户配合度高，情绪持续稳定。建议充分利用 10 分钟有效窗口深入挖掘需求，主动引导客户提出更多反馈。',
-        scripts: [
-          { tag: '挖掘话术', color: 'text-emerald-400 bg-emerald-400/10', text: '非常感谢您的耐心配合！除了刚才提到的问题，您在使用过程中还有没有其他需要优化的地方？' },
-          { tag: '增值话术', color: 'text-cyan-400 bg-cyan-400/10', text: '您的反馈对我们非常重要！为了感谢您的支持，我为您申请了一个专属权益，您可以了解一下。' },
-          { tag: '闭环话术', color: 'text-blue-400 bg-blue-400/10', text: '感谢您今天提供的宝贵意见，我会把您的建议反馈给产品团队。下次您来电时可以直接找我就好。' },
-        ],
-        eval: {
-          score: 93, stability: 98, speed: 90, empathy: 92, accuracy: 95,
-          stabilityLabel: '优秀', speedLabel: '优秀', empathyLabel: '优秀', accuracyLabel: '优秀',
-          stabilityColor: 'green', speedColor: 'green', empathyColor: 'green', accuracyColor: 'green',
-          issue: '无明显问题，沟通质量优秀。建议将本次通话录音作为新人培训的标杆案例。',
-          suggestion: '客户配合度极高，适合深度挖掘潜在需求。建议在通话中主动引导客户提供更多使用场景的反馈。',
-        },
-        preStrategy: '客户配合度高，沟通体验最为顺畅。建议充分利用 10 分钟有效窗口深入挖掘需求，主动引导客户提出更多反馈。',
-      },
+      { id:'zhang',name:'张总',avatar:'张',tags:['强势型','敏感型'],score:85,duration:5,color:'from-cyan-500 to-blue-600',
+        preStrategy:'客户性格强势敏感，建议以尊重、倾听为主，避免直接反驳。历史数据显示前 3 分钟为情绪稳定期，请尽量在此窗口内完成核心诉求沟通。如出现质疑语气，立即使用共情话术降温。',
+        eval:{ score:68, stability:45, speed:72, empathy:35, accuracy:60, stabilityLabel:'偏低',speedLabel:'良好',empathyLabel:'偏慢',accuracyLabel:'待提升',
+          stabilityColor:'red',speedColor:'green',empathyColor:'red',accuracyColor:'orange',
+          issue:'客户情绪升至 4 级时未及时使用「强制安抚」话术，导致对抗情绪持续 40s 未缓解。',
+          suggestion:'当系统触发三级风险预警时，必须立即使用「强制安抚」话术模板。本月已出现 3 次同类问题，请参加下周二专项话术培训。' } },
+      { id:'li',name:'李女士',avatar:'李',tags:['谨慎型','耐心型'],score:92,duration:8,color:'from-violet-500 to-purple-600',
+        preStrategy:'客户谨慎耐心，适合循序渐进式沟通。历史数据表明其注意力持续 8 分钟，可适当放慢语速给予思考时间。反问句式出现时主动停顿等待回应。',
+        eval:{ score:88, stability:92, speed:85, empathy:78, accuracy:90, stabilityLabel:'优秀',speedLabel:'良好',empathyLabel:'良好',accuracyLabel:'优秀',
+          stabilityColor:'green',speedColor:'green',empathyColor:'green',accuracyColor:'green',
+          issue:'整体表现优秀。建议在客户出现「轻微质疑」时更主动地给予确认反馈，可进一步提升客户信任感。',
+          suggestion:'客户属于谨慎型人格，适当放慢语速、在每个信息节点后主动确认「您看我这样解释清楚吗」，可有效提升沟通效率。' } },
+      { id:'wang',name:'王经理',avatar:'王',tags:['直爽型','高效型'],score:78,duration:4,color:'from-amber-500 to-orange-600',
+        preStrategy:'客户直爽高效，追求结果导向。建议开门见山，直奔主题。前 2 分钟为高效沟通窗口，避免寒暄和冗余信息。',
+        eval:{ score:76, stability:70, speed:65, empathy:72, accuracy:80, stabilityLabel:'中等',speedLabel:'偏快',empathyLabel:'中等',accuracyLabel:'良好',
+          stabilityColor:'amber',speedColor:'amber',empathyColor:'amber',accuracyColor:'green',
+          issue:'王经理偏好高效沟通，坐席语速偏快导致客户出现轻微不耐烦。建议降低语速、减少冗余信息。',
+          suggestion:'客户属于直爽型，沟通应直奔主题。建议在开场 30s 内说明来意，避免寒暄。前 2 分钟为高效窗口，请把控节奏。' } },
+      { id:'chen',name:'陈先生',avatar:'陈',tags:['敏感型','情绪型'],score:65,duration:3,color:'from-rose-500 to-pink-600',
+        preStrategy:'客户情绪敏感度高，极易被触发负面情绪。建议全程使用温和语气，音量保持平稳。历史显示其临界时长为 3 分钟，请严格控制通话节奏。',
+        eval:{ score:52, stability:20, speed:45, empathy:38, accuracy:55, stabilityLabel:'差',speedLabel:'偏慢',empathyLabel:'差',accuracyLabel:'待提升',
+          stabilityColor:'red',speedColor:'red',empathyColor:'red',accuracyColor:'orange',
+          issue:'客户从 2 级跃升至 5 级仅用时 25s，坐席未在 3 级预警触发时及时使用安抚话术，错过最佳干预窗口。',
+          suggestion:'陈先生属于高敏感情绪型客户，临界时长仅 3 分钟。系统触发 3 级预警时必须立即执行共情话术，未来类似客户建议提前转接资深坐席。' } },
+      { id:'liu',name:'刘小姐',avatar:'刘',tags:['温和型','配合型'],score:95,duration:10,color:'from-emerald-500 to-green-600',
+        preStrategy:'客户配合度高，沟通体验最为顺畅。建议充分利用 10 分钟有效窗口深入挖掘需求，主动引导客户提出更多反馈。',
+        eval:{ score:93, stability:98, speed:90, empathy:92, accuracy:95, stabilityLabel:'优秀',speedLabel:'优秀',empathyLabel:'优秀',accuracyLabel:'优秀',
+          stabilityColor:'green',speedColor:'green',empathyColor:'green',accuracyColor:'green',
+          issue:'无明显问题，沟通质量优秀。建议将本次通话录音作为新人培训的标杆案例。',
+          suggestion:'客户配合度极高，适合深度挖掘潜在需求。建议在通话中主动引导客户提供更多使用场景的反馈。' } },
     ];
 
     let currentCustomer = customers[0];
@@ -362,33 +233,170 @@
     let timerInterval = null;
     let isCallActive = false;
     let chartInstance = null;
+    // 实时数据缓冲区
+    let realtimePoints = [];
+    let ws = null;
 
-    // ===== 工具 =====
-    function formatTime(s) {
-      return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    // ===== WebSocket 连接 =====
+    function connectWebSocket() {
+      if (ws) { ws.close(); ws = null; }
+      realtimePoints = [];
+      const customerId = currentCustomer.id;
+      ws = new WebSocket(`ws://localhost:8080?customerId=${customerId}`);
+
+      ws.onopen = () => {
+        console.log(`[ws] 已连接 ws://localhost:8080?customerId=${customerId}`);
+        document.getElementById('transcriptText').textContent = `WebSocket 已连接 (${currentCustomer.name})，等待数据...`;
+      };
+
+      ws.onmessage = (evt) => {
+        try {
+          const data = JSON.parse(evt.data);
+          console.log('[ws] 收到:', data);
+          if (data.type === 'customerInfo') {
+            // 服务器确认了客户信息，无需额外处理
+            return;
+          }
+          handleRealtimeData(data);
+        } catch (e) {
+          console.warn('[ws] 数据解析失败:', e);
+        }
+      };
+
+      ws.onerror = (err) => {
+        console.warn('[ws] 连接错误:', err);
+        document.getElementById('transcriptText').textContent = '⚠️ WebSocket 连接异常，请检查后端服务是否启动。';
+      };
+
+      ws.onclose = () => {
+        console.log('[ws] 连接已关闭');
+        if (isCallActive) {
+          document.getElementById('transcriptText').textContent += '\n--- WebSocket 已断开 ---';
+        }
+      };
     }
 
-    // ===== 渲染客户群像 =====
+    // ===== 处理实时数据 =====
+    function handleRealtimeData(data) {
+      const level = data.emotionLevel;
+      const text = data.text || '';
+      const wording = data.recommendWording || '';
+
+      // 1. 更新通话文本
+      const ts = data.timestamp || '';
+      const p = document.getElementById('transcriptText');
+      const line = `[${ts}] 等级 ${level} · ${text}`;
+      if (p.textContent === '等待后端数据接入...' || p.textContent === 'WebSocket 已连接，等待数据...') {
+        p.textContent = line;
+      } else {
+        p.textContent += '\n' + line;
+      }
+      p.scrollTop = p.scrollHeight;
+
+      // 2. 更新风险面板
+      updateRiskPanel(level, wording);
+
+      // 3. 更新话术面板（当 recommendWording 存在时）
+      if (wording) {
+        updateScriptPanel(level, wording);
+      }
+
+      // 4. 更新图表
+      pushChartPoint(ts, level);
+    }
+
+    // ===== 更新风险面板 =====
+    function updateRiskPanel(level, wording) {
+      const badge = document.getElementById('riskBadge');
+      const levelEl = document.getElementById('riskLevelDisplay');
+      const labelEl = document.getElementById('riskLabelDisplay');
+      const dot = document.getElementById('riskDot');
+
+      const labels = ['','平静愉悦','轻微不满','明显烦躁','生气抵触','暴怒失控'];
+      const label = labels[level] || '未知';
+      levelEl.textContent = level;
+      labelEl.textContent = label;
+
+      // 重置样式
+      badge.className = 'rounded-xl border px-4 py-3 text-center';
+      badge.classList.remove('alert-breath','alert-breath-amber','alert-breath-green','border-pulse-red','bg-[#1a0a0a]/80','bg-[#1a1400]','bg-[#0a1a0a]');
+
+      if (level >= 5) {
+        badge.classList.add('alert-breath','border-pulse-red','bg-[#1a0a0a]/80','border-2');
+        levelEl.className = 'text-red-500 text-5xl font-black tracking-tighter';
+        labelEl.className = 'text-red-400 text-sm font-medium mt-0.5';
+        dot.className = 'w-2 h-2 rounded-full bg-red-400';
+      } else if (level >= 4) {
+        badge.classList.add('alert-breath','bg-[#1a0a0a]/80','border-2','border-red-800/40');
+        levelEl.className = 'text-red-400 text-5xl font-black tracking-tighter';
+        labelEl.className = 'text-red-400 text-sm font-medium mt-0.5';
+        dot.className = 'w-2 h-2 rounded-full bg-red-400';
+      } else if (level >= 3) {
+        badge.classList.add('alert-breath-amber','bg-[#1a1400]','border-2','border-amber-800/40');
+        levelEl.className = 'text-amber-400 text-5xl font-black tracking-tighter';
+        labelEl.className = 'text-amber-400 text-sm font-medium mt-0.5';
+        dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+      } else if (level >= 1) {
+        badge.classList.add('alert-breath-green','bg-[#0a1a0a]','border-2','border-green-800/40');
+        levelEl.className = 'text-green-400 text-5xl font-black tracking-tighter';
+        labelEl.className = 'text-green-400 text-sm font-medium mt-0.5';
+        dot.className = 'w-2 h-2 rounded-full bg-green-400';
+      }
+    }
+
+    // ===== 更新话术面板 =====
+    function updateScriptPanel(level, wording) {
+      const panel = document.getElementById('scriptPanel');
+      const title = document.getElementById('scriptPanelTitle');
+      const labels = ['','平静愉悦','轻微不满','明显烦躁','生气抵触','暴怒失控'];
+      title.innerHTML = `<span class="w-2 h-2 rounded-full bg-violet-400"></span>实时辅助话术推荐（针对 ${level} 级 ${labels[level]||''}）`;
+
+      if (wording) {
+        panel.innerHTML = `
+          <div class="script-card bg-[#131b2f] border border-[#1e293b] rounded-lg p-4 relative cursor-pointer group" onclick="copyScript(this)">
+            <div class="flex items-start gap-3">
+              <span class="text-cyan-400 text-xs font-bold bg-cyan-400/10 rounded px-2 py-0.5 mt-0.5 shrink-0">系统推荐话术</span>
+              <p class="text-[#cbd5e1] text-sm leading-relaxed">${wording}</p>
+            </div>
+            <div class="copy-hint absolute top-2 right-2 text-[#64748b] text-xs flex items-center gap-1 bg-[#0e1428] px-2 py-1 rounded">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>复制
+            </div>
+          </div>`;
+      } else {
+        panel.innerHTML = `<div class="flex items-center justify-center h-full text-[#64748b] text-xs">当前等级无需特殊话术</div>`;
+      }
+    }
+
+    // ===== 图表动态推点 =====
+    function pushChartPoint(timestamp, level) {
+      if (!chartInstance) return;
+      realtimePoints.push({ timestamp, level });
+
+      const labels = realtimePoints.map(p => p.timestamp);
+      const values = realtimePoints.map(p => p.level);
+
+      chartInstance.setOption({
+        xAxis: { data: labels },
+        series: [{ data: values }],
+      });
+    }
+
+    // ===== 渲染函数 =====
     function renderCustomerPortfolio(containerId, activeId, size) {
       const container = document.getElementById(containerId);
       if (!container) return;
       container.innerHTML = customers.map(c => {
         const active = c.id === activeId;
         const cls = `customer-avatar-sm ${active?'active':''}`;
-        if (size === 'sm') {
-          return `<div class="${cls}" onclick="switchCustomer('${c.id}')" title="${c.name} · ${c.tags.join(' / ')}"><span>${c.avatar}</span></div>`;
-        }
-        return `<div class="${cls} flex-col !w-14 !h-14 gap-0" onclick="switchCustomer('${c.id}')" title="${c.name} · ${c.tags.join(' / ')}">
-          <span>${c.avatar}</span>
-          <span class="text-[9px] text-[#64748b]">${c.name}</span>
-        </div>`;
+        if (size === 'sm') return `<div class="${cls}" onclick="switchCustomer('${c.id}')" title="${c.name} · ${c.tags.join(' / ')}"><span>${c.avatar}</span></div>`;
+        return `<div class="${cls} flex-col !w-14 !h-14 gap-0" onclick="switchCustomer('${c.id}')" title="${c.name} · ${c.tags.join(' / ')}"><span>${c.avatar}</span><span class="text-[9px] text-[#64748b]">${c.name}</span></div>`;
       }).join('');
     }
 
-    // ===== 渲染弹窗客户详情 =====
     function renderCustomerDetail(c) {
       const el = document.getElementById('selectedCustomerDetail');
       if (!el) return;
+      const rc = c.risk || { level:'-', label:'待评估', color:'gray' };
       el.innerHTML = `
         <div class="flex items-start gap-5">
           <div class="customer-avatar-lg bg-gradient-to-br ${c.color} !border-0 !text-white">${c.avatar}</div>
@@ -408,8 +416,8 @@
                 <div class="text-amber-400 font-bold text-lg">${c.duration}<span class="text-[#64748b] text-xs">分钟</span></div>
               </div>
               <div class="bg-[#131b2f] rounded-lg p-3 text-center">
-                <div class="text-[#64748b] text-[10px]">预期风险峰值</div>
-                <div class="${c.risk.color === 'red' ? 'text-red-400' : c.risk.color === 'amber' ? 'text-amber-400' : 'text-green-400'} font-bold text-lg">${c.risk.level}<span class="text-[#64748b] text-xs">级</span></div>
+                <div class="text-[#64748b] text-[10px]">预期风险</div>
+                <div class="text-[#94a3b8] font-bold text-lg">--<span class="text-[#64748b] text-xs"></span></div>
               </div>
             </div>
           </div>
@@ -417,133 +425,36 @@
         <div class="mt-4 bg-[#131b2f] rounded-lg px-4 py-3 flex items-start gap-3">
           <span class="text-cyan-400 text-xs font-bold shrink-0 mt-0.5">🎯 沟通预案</span>
           <p class="text-[#94a3b8] text-xs leading-relaxed">${c.preStrategy}</p>
-        </div>
-        <div class="mt-3 flex gap-2">
-          <span class="text-[#64748b] text-[10px]">风险等级预览：</span>
-          <span class="text-xs px-2 py-0.5 rounded font-medium ${riskBadgeClass(c.risk)}">${c.risk.level} 级 · ${c.risk.label}</span>
-        </div>
-      `;
+        </div>`;
     }
 
-    function riskBadgeClass(r) {
-      if (r.color === 'red') return 'bg-red-900/40 text-red-400 border border-red-800/40';
-      if (r.color === 'amber') return 'bg-amber-900/40 text-amber-400 border border-amber-800/40';
-      return 'bg-green-900/40 text-green-400 border border-green-800/40';
-    }
-
-    // ===== 渲染画像看板 =====
     function renderProfileBar(c) {
       const el = document.getElementById('profileDetail');
       if (!el) return;
       el.innerHTML = `
-        <div class="text-center">
-          <div class="text-[#64748b] text-xs mb-0.5">客户姓名</div>
-          <div class="text-white font-bold">${c.name}</div>
-        </div>
+        <div class="text-center"><div class="text-[#64748b] text-xs mb-0.5">客户姓名</div><div class="text-white font-bold">${c.name}</div></div>
         <div class="w-px h-8 bg-[#1e293b]"></div>
-        <div class="text-center">
-          <div class="text-[#64748b] text-xs mb-0.5">性格标签</div>
-          <div class="flex gap-1.5">${c.tags.map(t => `<span class="text-xs bg-cyan-400/10 text-cyan-400 font-medium px-2 py-0.5 rounded">${t}</span>`).join('')}</div>
-        </div>
+        <div class="text-center"><div class="text-[#64748b] text-xs mb-0.5">性格标签</div><div class="flex gap-1.5">${c.tags.map(t => `<span class="text-xs bg-cyan-400/10 text-cyan-400 font-medium px-2 py-0.5 rounded">${t}</span>`).join('')}</div></div>
         <div class="w-px h-8 bg-[#1e293b]"></div>
-        <div class="text-center">
-          <div class="text-[#64748b] text-xs mb-0.5">历史通话质量</div>
-          <div class="text-green-400 font-bold text-lg">${c.score}<span class="text-xs text-[#64748b]">分</span></div>
-        </div>
+        <div class="text-center"><div class="text-[#64748b] text-xs mb-0.5">历史通话质量</div><div class="text-green-400 font-bold text-lg">${c.score}<span class="text-xs text-[#64748b]">分</span></div></div>
         <div class="w-px h-8 bg-[#1e293b]"></div>
-        <div class="text-center">
-          <div class="text-[#64748b] text-xs mb-0.5">最优沟通时长</div>
-          <div class="text-amber-400 font-bold text-lg">${c.duration}<span class="text-xs text-[#64748b]">分钟</span></div>
-        </div>
+        <div class="text-center"><div class="text-[#64748b] text-xs mb-0.5">最优沟通时长</div><div class="text-amber-400 font-bold text-lg">${c.duration}<span class="text-xs text-[#64748b]">分钟</span></div></div>
       `;
     }
 
-    // ===== 渲染风险面板 =====
-    function renderRiskPanel(c) {
-      const el = document.getElementById('riskPanel');
-      const dot = document.getElementById('riskDot');
-      if (!el) return;
-      const r = c.risk;
-      const isRed = r.color === 'red';
-      const isAmber = r.color === 'amber';
-      const pulseClass = isRed ? 'alert-breath' : isAmber ? 'alert-breath-amber' : 'alert-breath-green';
-      const borderClass = isRed ? 'border-pulse-red' : '';
-      const bgClass = isRed ? 'bg-[#1a0a0a]' : isAmber ? 'bg-[#1a1400]' : 'bg-[#0a1a0a]';
-      const borderInner = isRed ? 'border-[#450a0a]' : isAmber ? 'border-[#452a0a]' : 'border-[#0a452a]';
-      const textClass = isRed ? 'text-red-400' : isAmber ? 'text-amber-400' : 'text-green-400';
-      const btnClass = isRed ? 'bg-red-600 hover:bg-red-700' : isAmber ? 'bg-amber-600 hover:bg-amber-700' : 'bg-green-600 hover:bg-green-700';
-      const dotColor = isRed ? 'bg-red-400' : isAmber ? 'bg-amber-400' : 'bg-green-400';
-      dot.className = `w-2 h-2 rounded-full ${dotColor}`;
-
-      el.innerHTML = `
-        <div class="${pulseClass} rounded-2xl border-2 ${isRed ? borderClass : 'border-transparent'} ${bgClass}/80 px-8 py-4 text-center w-full">
-          <div class="${textClass} text-xs font-medium tracking-widest uppercase mb-1">RISK LEVEL</div>
-          <div class="${textClass.replace('text-','text-').replace('400','500')} text-6xl font-black tracking-tighter">${r.level}</div>
-          <div class="${textClass} text-lg font-bold mt-1">${r.label}</div>
-        </div>
-        <div class="${bgClass} border ${borderInner} rounded-lg px-4 py-3 w-full">
-          <p class="${textClass} text-sm font-bold text-center leading-relaxed">${c.warning}</p>
-        </div>
-        <div class="flex gap-2 w-full">
-          <button class="flex-1 ${btnClass} text-white font-bold py-2 rounded-lg text-sm transition">转接资深坐席</button>
-          <button class="flex-1 bg-[#1e293b] hover:bg-[#334155] text-[#94a3b8] font-bold py-2 rounded-lg text-sm transition">延后回电</button>
-        </div>
-      `;
-    }
-
-    // ===== 渲染话术面板 =====
-    function renderScriptPanel(c) {
-      const el = document.getElementById('scriptPanel');
-      const title = document.getElementById('scriptPanelTitle');
-      if (!el) return;
-      const levelName = { 1:'平静愉悦', 2:'轻微不满', 3:'明显烦躁', 4:'生气抵触', 5:'暴怒失控' }[c.risk.level] || c.risk.label;
-      title.innerHTML = `<span class="w-2 h-2 rounded-full bg-violet-400"></span>实时辅助话术推荐（针对 ${c.risk.level} 级 ${levelName}）`;
-      el.innerHTML = c.scripts.map(s => `
-        <div class="script-card bg-[#131b2f] border border-[#1e293b] rounded-lg p-4 relative cursor-pointer group" onclick="copyScript(this)">
-          <div class="flex items-start gap-3">
-            <span class="${s.color} text-xs font-bold rounded px-2 py-0.5 mt-0.5 shrink-0">${s.tag}</span>
-            <p class="text-[#cbd5e1] text-sm leading-relaxed">${s.text}</p>
-          </div>
-          <div class="copy-hint absolute top-2 right-2 text-[#64748b] text-xs flex items-center gap-1 bg-[#0e1428] px-2 py-1 rounded">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>复制
-          </div>
-        </div>
-      `).join('');
-    }
-
-    // ===== 渲染评价面板 =====
     function renderEvalPanel(c) {
       const el = document.getElementById('evalContent');
       if (!el) return;
       const e = c.eval;
-      const scoreColor = e.score >= 85 ? 'text-green-400' : e.score >= 70 ? 'text-amber-400' : 'text-red-400';
+      const sc = e.score >= 85 ? 'text-green-400' : e.score >= 70 ? 'text-amber-400' : 'text-red-400';
       el.innerHTML = `
         <div class="flex gap-6">
           <div class="flex flex-col items-center gap-2 shrink-0">
-            <div class="score-ring" style="width:90px;height:90px;">
-              <svg width="90" height="90" viewBox="0 0 90 90">
-                <circle class="bg" cx="45" cy="45" r="38"/>
-                <circle class="fg" id="scoreCircle" cx="45" cy="45" r="38" stroke-dasharray="238.76" stroke-dashoffset="238.76"/>
-              </svg>
-              <div class="absolute text-white text-2xl font-black ${scoreColor}" id="scoreText">${e.score}</div>
-            </div>
+            <div class="score-ring" style="width:90px;height:90px;"><svg width="90" height="90" viewBox="0 0 90 90"><circle class="bg" cx="45" cy="45" r="38"/><circle class="fg" id="scoreCircle" cx="45" cy="45" r="38" stroke-dasharray="238.76" stroke-dashoffset="238.76"/></svg><div class="absolute text-white text-2xl font-black ${sc}" id="scoreText">${e.score}</div></div>
             <span class="text-[#64748b] text-xs">综合评分</span>
           </div>
           <div class="flex-1 grid grid-cols-2 gap-x-8 gap-y-3">
-            ${[
-              { label: '情绪稳定性', value: e.stability, color: e.stabilityColor, text: e.stabilityLabel },
-              { label: '语速匹配度', value: e.speed, color: e.speedColor, text: e.speedLabel },
-              { label: '共情响应时效', value: e.empathy, color: e.empathyColor, text: e.empathyLabel },
-              { label: '话术使用准确率', value: e.accuracy, color: e.accuracyColor, text: e.accuracyLabel },
-            ].map(d => `<div>
-              <div class="text-[#64748b] text-xs mb-1">${d.label}</div>
-              <div class="flex items-center gap-2">
-                <div class="flex-1 h-1.5 bg-[#1e293b] rounded-full overflow-hidden">
-                  <div class="h-full rounded-full" style="width:${d.value}%;background:${d.color === 'green' ? '#22c55e' : d.color === 'red' ? '#ef4444' : d.color === 'amber' ? '#f59e0b' : '#f97316'}"></div>
-                </div>
-                <span class="text-xs font-bold" style="color:${d.color === 'green' ? '#22c55e' : d.color === 'red' ? '#ef4444' : d.color === 'amber' ? '#f59e0b' : '#f97316'}">${d.text}</span>
-              </div>
-            </div>`).join('')}
+            ${[{l:'情绪稳定性',v:e.stability,c:e.stabilityColor,t:e.stabilityLabel},{l:'语速匹配度',v:e.speed,c:e.speedColor,t:e.speedLabel},{l:'共情响应时效',v:e.empathy,c:e.empathyColor,t:e.empathyLabel},{l:'话术使用准确率',v:e.accuracy,c:e.accuracyColor,t:e.accuracyLabel}].map(d => `<div><div class="text-[#64748b] text-xs mb-1">${d.l}</div><div class="flex items-center gap-2"><div class="flex-1 h-1.5 bg-[#1e293b] rounded-full overflow-hidden"><div class="h-full rounded-full" style="width:${d.v}%;background:${d.c==='green'?'#22c55e':d.c==='red'?'#ef4444':d.c==='amber'?'#f59e0b':'#f97316'}"></div></div><span class="text-xs font-bold" style="color:${d.c==='green'?'#22c55e':d.c==='red'?'#ef4444':d.c==='amber'?'#f59e0b':'#f97316'}">${d.t}</span></div></div>`).join('')}
           </div>
           <div class="w-64 shrink-0 bg-[#0a0f1f] rounded-lg border border-[#1e293b] p-4">
             <div class="text-red-400 text-xs font-bold mb-2">⚠️ 主要问题</div>
@@ -551,43 +462,30 @@
             <div class="text-emerald-400 text-xs font-bold mb-2">💡 改进建议</div>
             <p class="text-[#94a3b8] text-xs leading-relaxed">${e.suggestion}</p>
           </div>
-        </div>
-      `;
-      // 动画驱动评分环
+        </div>`;
       setTimeout(() => {
         const circle = document.getElementById('scoreCircle');
         if (!circle) return;
-        const circumference = 238.76;
-        const offset = circumference - (e.score / 100) * circumference;
-        circle.style.strokeDashoffset = offset;
-        circle.style.stroke = e.score >= 85 ? '#22c55e' : e.score >= 70 ? '#f59e0b' : '#ef4444';
+        const circ = 238.76;
+        circle.style.strokeDashoffset = circ - (e.score/100)*circ;
+        circle.style.stroke = e.score>=85?'#22c55e':e.score>=70?'#f59e0b':'#ef4444';
       }, 300);
     }
 
-    // ===== 刷新全部面板 =====
     function refreshAllPanels(c) {
       renderCustomerPortfolio('headerCustomerBar', c.id, 'sm');
       renderProfileBar(c);
-      renderRiskPanel(c);
-      renderScriptPanel(c);
-      renderEvalPanel(c);
-      initChart(c);
     }
 
-    // ===== 切换客户 =====
     function switchCustomer(id) {
       currentCustomer = customers.find(c => c.id === id) || customers[0];
       renderCustomerPortfolio('customerPortfolio', currentCustomer.id, 'lg');
       renderCustomerDetail(currentCustomer);
-      const mainShown = document.getElementById('mainApp').classList.contains('hidden') === false;
-      if (mainShown && isCallActive) {
-        refreshAllPanels(currentCustomer);
-      } else if (mainShown) {
+      if (document.getElementById('mainApp').classList.contains('hidden') === false) {
         refreshAllPanels(currentCustomer);
       }
     }
 
-    // ===== 模拟演示 =====
     function switchToMock() { switchCustomer('chen'); }
 
     // ===== 接听 =====
@@ -602,6 +500,11 @@
         document.getElementById('callTimer').textContent = formatTime(callSeconds);
       }, 1000);
       refreshAllPanels(currentCustomer);
+
+      // 初始化空图表
+      initEmptyChart();
+      // 连接 WebSocket
+      connectWebSocket();
     }
 
     // ===== 结束通话 =====
@@ -609,6 +512,7 @@
       if (!isCallActive) return;
       isCallActive = false;
       if (timerInterval) clearInterval(timerInterval);
+      if (ws) { ws.close(); ws = null; }
       const elapsed = formatTime(callSeconds);
       document.getElementById('evalPanel').classList.remove('collapsed');
       document.getElementById('evalPanel').classList.add('expanded');
@@ -617,7 +521,6 @@
       alert(`✅ 通话已结束（时长 ${elapsed}）\n\n客户：${currentCustomer.name}\n评分：${currentCustomer.eval.score}/100\n问题：${currentCustomer.eval.issue}`);
     }
 
-    // ===== 切换评价面板 =====
     function toggleEvalPanel() {
       const p = document.getElementById('evalPanel');
       const a = document.getElementById('evalArrow');
@@ -626,7 +529,6 @@
       a.classList.toggle('rotate-180');
     }
 
-    // ===== 复制话术 =====
     function copyScript(el) {
       const text = el.querySelector('p').textContent;
       navigator.clipboard.writeText(text).then(() => {
@@ -635,74 +537,42 @@
         hint.innerHTML = '<span class="text-green-400 text-xs">已复制 ✓</span>';
         setTimeout(() => { hint.innerHTML = orig; }, 1200);
       }).catch(() => {
-        const r = document.createRange();
-        r.selectNodeContents(el.querySelector('p'));
-        const s = window.getSelection();
-        s.removeAllRanges(); s.addRange(r);
+        const r = document.createRange(); r.selectNodeContents(el.querySelector('p'));
+        const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
         document.execCommand('copy'); s.removeAllRanges();
       });
     }
 
-    // ===== ECharts =====
-    function initChart(c) {
-      c = c || currentCustomer;
+    function formatTime(s) { return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
+
+    // ===== 初始化空图表（等待 WebSocket 数据推点） =====
+    function initEmptyChart() {
       const dom = document.getElementById('emotionChart');
       if (!dom) return;
       if (chartInstance) chartInstance.dispose();
       chartInstance = echarts.init(dom, 'dark');
-      const em = c.emotion;
-      const isRage = c.risk.level >= 4;
-      const lineColor = isRage ? '#ef4444' : c.risk.level >= 3 ? '#f59e0b' : '#22c55e';
-      const areaStops = isRage
-        ? [{ offset: 0, color: 'rgba(239,68,68,0.45)' }, { offset: 1, color: 'rgba(239,68,68,0.02)' }]
-        : c.risk.level >= 3
-        ? [{ offset: 0, color: 'rgba(251,191,36,0.35)' }, { offset: 1, color: 'rgba(251,191,36,0.02)' }]
-        : [{ offset: 0, color: 'rgba(34,197,94,0.3)' }, { offset: 1, color: 'rgba(34,197,94,0.02)' }];
       const option = {
-        tooltip: {
-          trigger: 'axis', backgroundColor: 'rgba(15,23,42,0.9)', borderColor: '#1e293b',
-          textStyle: { color: '#e2e8f0', fontSize: 12 },
+        tooltip: { trigger:'axis', backgroundColor:'rgba(15,23,42,0.9)', borderColor:'#1e293b', textStyle:{color:'#e2e8f0',fontSize:12},
           formatter: function(params) {
-            const p = params[0]; const v = p.value;
-            let label = '';
-            if (v <= 1.5) label = '平静愉悦';
-            else if (v <= 2.5) label = '轻微不满';
-            else if (v <= 3.5) label = '明显烦躁';
-            else if (v <= 4.5) label = '生气抵触';
-            else label = '暴怒失控';
+            const p = params[0]; if (!p) return '等待数据...';
+            const v = p.value; let label='';
+            if (v<=1.5) label='平静愉悦'; else if (v<=2.5) label='轻微不满'; else if (v<=3.5) label='明显烦躁'; else if (v<=4.5) label='生气抵触'; else label='暴怒失控';
             return `<div style="font-weight:600;margin-bottom:4px;">${p.axisValue}</div>情绪等级：${v.toFixed(1)} 级 — ${label}`;
           }
         },
-        grid: { left: '3%', right: '3%', top: '8%', bottom: '10%' },
-        xAxis: {
-          type: 'category', data: em.timeLabels,
-          axisLine: { lineStyle: { color: '#1e293b' } },
-          axisLabel: { color: '#64748b', fontSize: 10, interval: 2 },
-          splitLine: { show: false },
-        },
-        yAxis: {
-          type: 'value', min: 0.5, max: 5.5, splitNumber: 5,
-          axisLine: { show: false },
-          axisLabel: { color: '#64748b', fontSize: 10, formatter: v => ({1:'1 平静',2:'2 不满',3:'3 烦躁',4:'4 生气',5:'5 暴怒'}[v]||v) },
-          splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } },
-        },
+        grid: { left:'3%', right:'3%', top:'8%', bottom:'10%' },
+        xAxis: { type:'category', data:[], axisLine:{lineStyle:{color:'#1e293b'}}, axisLabel:{color:'#64748b',fontSize:10}, splitLine:{show:false} },
+        yAxis: { type:'value', min:0.5, max:5.5, splitNumber:5, axisLine:{show:false},
+          axisLabel:{ color:'#64748b', fontSize:10, formatter:v => ({1:'1 平静',2:'2 不满',3:'3 烦躁',4:'4 生气',5:'5 暴怒'}[v]||v) },
+          splitLine:{lineStyle:{color:'#1e293b',type:'dashed'}} },
         series: [{
-          type: 'line', data: em.data, smooth: true,
-          symbol: 'circle', symbolSize: 6,
-          lineStyle: { width: 3, color: lineColor },
-          areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: areaStops } },
-          markPoint: {
-            data: em.marks,
-            symbol: 'pin', symbolSize: 48, itemStyle: { color: c.risk.level >= 4 ? '#ef4444' : '#f59e0b' },
-            label: { color: '#fff', fontSize: 10, fontWeight: 'bold' }
-          },
-          markLine: {
-            silent: true,
-            data: [
-              { yAxis: 3, lineStyle: { color: '#f59e0b', type: 'dashed', width: 1 }, label: { formatter: '烦躁阈值', color: '#f59e0b', fontSize: 10 } },
-              { yAxis: 5, lineStyle: { color: '#ef4444', type: 'dashed', width: 1 }, label: { formatter: '暴怒阈值', color: '#ef4444', fontSize: 10 } },
-            ]
-          }
+          type:'line', data:[], smooth:true, symbol:'circle', symbolSize:8,
+          lineStyle:{width:3,color:'#3b82f6'},
+          areaStyle:{ color:{ type:'linear', x:0,y:0,x2:0,y2:1, colorStops:[{offset:0,color:'rgba(59,130,246,0.45)'},{offset:1,color:'rgba(59,130,246,0.02)'}] } },
+          markLine:{ silent:true, data:[
+            { yAxis:3, lineStyle:{color:'#f59e0b',type:'dashed',width:1}, label:{formatter:'烦躁阈值',color:'#f59e0b',fontSize:10} },
+            { yAxis:5, lineStyle:{color:'#ef4444',type:'dashed',width:1}, label:{formatter:'暴怒阈值',color:'#ef4444',fontSize:10} },
+          ]}
         }]
       };
       chartInstance.setOption(option);
@@ -715,6 +585,5 @@
     renderCustomerPortfolio('customerPortfolio', currentCustomer.id, 'lg');
     renderCustomerDetail(currentCustomer);
   </script>
-
 </body>
 </html>
