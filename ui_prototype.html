@@ -397,67 +397,96 @@
       const el = document.getElementById('selectedCustomerDetail');
       if (!el) return;
 
-      // ===== 客户画像 mock 数据 =====
+      // ===== 客户画像详情 mock 数据（五人五面） =====
       const profileMap = {
-        zhang: { age:42, gender:'男', product:'投资理财产品 10,000 元', riskLevel:'PR3', riskTolerance:'2.3', wealth:'黄金客户' },
-        li:    { age:35, gender:'女', product:'定期存款 500,000 元',   riskLevel:'PR2', riskTolerance:'1.5', wealth:'铂金客户' },
-        wang:  { age:45, gender:'男', product:'基金产品 200,000 元',    riskLevel:'PR4', riskTolerance:'4.1', wealth:'钻石客户' },
-        chen:  { age:28, gender:'男', product:'信用贷款 80,000 元',     riskLevel:'PR3', riskTolerance:'3.0', wealth:'黄金客户' },
-        liu:   { age:30, gender:'女', product:'活期理财 30,000 元',    riskLevel:'PR2', riskTolerance:'1.8', wealth:'铂金客户' },
+        zhang: { age:42, gender:'男', product:'投资理财产品', amount:'10,000 元', riskLevel:'PR3', riskTolerance:'2.3', wealth:'黄金客户', customerType:'高净值客户', totalCalls:12, recentCalls:3 },
+        li:    { age:35, gender:'女', product:'定期存款',     amount:'500,000 元', riskLevel:'PR2', riskTolerance:'1.5', wealth:'铂金客户', customerType:'稳健型客户', totalCalls:25, recentCalls:2 },
+        wang:  { age:45, gender:'男', product:'基金产品',     amount:'200,000 元', riskLevel:'PR4', riskTolerance:'4.1', wealth:'钻石客户', customerType:'成长型客户', totalCalls:8,  recentCalls:1 },
+        chen:  { age:28, gender:'男', product:'信用贷款',     amount:'80,000 元',  riskLevel:'PR3', riskTolerance:'3.0', wealth:'黄金客户', customerType:'信用型客户', totalCalls:15, recentCalls:5 },
+        liu:   { age:30, gender:'女', product:'活期理财',     amount:'30,000 元',  riskLevel:'PR2', riskTolerance:'1.8', wealth:'铂金客户', customerType:'活跃型客户', totalCalls:32, recentCalls:6 },
       };
-      const p = profileMap[c.id] || { age:'--', gender:'--', product:'--', riskLevel:'--', riskTolerance:'--', wealth:'--' };
+      const p = profileMap[c.id] || { age:'--', gender:'--', product:'--', amount:'--', riskLevel:'--', riskTolerance:'--', wealth:'--', customerType:'--', totalCalls:'--', recentCalls:'--' };
 
-      // 将动态标签拼入原有 tags
-      const dynamicTags = [`${p.gender} · ${p.age}岁`, p.riskLevel, p.wealth];
-      const allTags = [...c.tags, ...dynamicTags];
+      // 财富等级颜色映射
+      const wealthColor = p.wealth === '钻石客户' ? 'text-cyan-400' : p.wealth === '铂金客户' ? 'text-purple-400' : 'text-amber-400';
 
       el.innerHTML = `
-        <div class="flex items-start gap-5">
-          <div class="customer-avatar-lg bg-gradient-to-br ${c.color} !border-0 !text-white">${c.avatar}</div>
-          <div class="flex-1">
+        <div class="flex gap-5">
+          <!-- 左侧：头像 -->
+          <div class="customer-avatar-lg bg-gradient-to-br ${c.color} !border-0 !text-white shrink-0">${c.avatar}</div>
+          <!-- 右侧：所有信息 -->
+          <div class="flex-1 min-w-0">
+            <!-- 姓名 + 性格标签 -->
             <div class="flex items-center gap-2 mb-2 flex-wrap">
               <span class="text-white text-lg font-bold">${c.name}</span>
-              ${allTags.map(t => `<span class="text-xs bg-cyan-400/10 text-cyan-400 font-medium px-2 py-0.5 rounded whitespace-nowrap">${t}</span>`).join('')}
-              <span class="text-xs bg-[#1e293b] text-[#94a3b8] px-2 py-0.5 rounded">历史评分 ${c.score}</span>
+              ${c.tags.map(t => `<span class="text-xs bg-cyan-400/10 text-cyan-400 font-medium px-2 py-0.5 rounded">${t}</span>`).join('')}
+              <span class="text-xs bg-[#1e293b] text-[#94a3b8] px-2 py-0.5 rounded">评分 ${c.score}</span>
             </div>
-            <div class="grid grid-cols-3 gap-4 mt-3">
-              <div class="bg-[#131b2f] rounded-lg p-3 text-center">
-                <div class="text-[#64748b] text-[10px]">历史通话质量</div>
-                <div class="text-green-400 font-bold text-lg">${c.score}<span class="text-[#64748b] text-xs">分</span></div>
-              </div>
-              <div class="bg-[#131b2f] rounded-lg p-3 text-center">
-                <div class="text-[#64748b] text-[10px]">最优沟通时长</div>
-                <div class="text-amber-400 font-bold text-lg">${c.duration}<span class="text-[#64748b] text-xs">分钟</span></div>
-              </div>
-              <div class="bg-[#131b2f] rounded-lg p-3 text-center">
-                <div class="text-[#64748b] text-[10px]">预期风险</div>
-                <div class="text-[#94a3b8] font-bold text-lg">--</div>
-              </div>
+            <!-- 金融标签（与性格标签区分） -->
+            <div class="flex items-center gap-1.5 mb-3 flex-wrap">
+              <span class="text-[#64748b] text-[10px] font-medium mr-1">📊 标签</span>
+              <span class="text-xs bg-violet-400/10 text-violet-400 px-2 py-0.5 rounded">${p.riskLevel}</span>
+              <span class="text-xs ${wealthColor.replace('text-','bg-').replace(/(cyan|purple|amber)-\d+/,'$1-400/10')} ${wealthColor} px-2 py-0.5 rounded">${p.wealth}</span>
+              <span class="text-xs bg-emerald-400/10 text-emerald-400 px-2 py-0.5 rounded">${p.customerType}</span>
+              <span class="text-xs bg-amber-400/10 text-amber-400 px-2 py-0.5 rounded">${p.gender} · ${p.age}岁</span>
             </div>
-            <!-- 详细属性卡片 -->
-            <div class="mt-3 bg-[#131b2f] border border-[#1e293b] rounded-lg p-3 grid grid-cols-2 gap-x-6 gap-y-2">
+            <!-- 详细画像卡片（统一网格，无重复项） -->
+            <div class="bg-[#131b2f] border border-[#1e293b] rounded-lg p-3 grid grid-cols-2 gap-x-6 gap-y-2.5">
               <div class="flex items-center justify-between">
-                <span class="text-[#64748b] text-xs">持有产品</span>
-                <span class="text-white text-xs font-medium">${p.product}</span>
+                <span class="text-[#64748b] text-xs">👤 性别</span>
+                <span class="text-white text-xs font-medium">${p.gender}</span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-[#64748b] text-xs">风险承受力</span>
-                <span class="text-white text-xs font-medium">${p.riskTolerance}</span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-[#64748b] text-xs">${p.gender === '男' ? '先生' : '女士'} · 年龄</span>
+                <span class="text-[#64748b] text-xs">🎂 年龄</span>
                 <span class="text-white text-xs font-medium">${p.age} 岁</span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-[#64748b] text-xs">财富等级</span>
-                <span class="text-xs font-medium ${p.wealth === '钻石客户' ? 'text-cyan-400' : p.wealth === '铂金客户' ? 'text-purple-400' : 'text-amber-400'}">${p.wealth}</span>
+                <span class="text-[#64748b] text-xs">📦 持有产品</span>
+                <span class="text-white text-xs font-medium">${p.product}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-[#64748b] text-xs">💰 产品金额</span>
+                <span class="text-white text-xs font-medium">${p.amount}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-[#64748b] text-xs">📋 风险测评</span>
+                <span class="text-white text-xs font-medium">${p.riskLevel}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-[#64748b] text-xs">⚖️ 风险承受力</span>
+                <span class="text-white text-xs font-medium">${p.riskTolerance}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-[#64748b] text-xs">🏆 财富等级</span>
+                <span class="text-xs font-medium ${wealthColor}">${p.wealth}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-[#64748b] text-xs">📂 客户类型</span>
+                <span class="text-white text-xs font-medium">${p.customerType}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-[#64748b] text-xs">📞 历史通话</span>
+                <span class="text-white text-xs font-medium">${p.totalCalls} 次</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-[#64748b] text-xs">📅 近 30 天</span>
+                <span class="text-white text-xs font-medium">${p.recentCalls} 次</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-[#64748b] text-xs">⭐ 综合评分</span>
+                <span class="text-green-400 text-xs font-medium">${c.score} 分</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-[#64748b] text-xs">⏱ 最优时长</span>
+                <span class="text-amber-400 text-xs font-medium">${c.duration} 分钟</span>
               </div>
             </div>
+            <!-- 沟通预案 -->
+            <div class="mt-3 bg-[#0a0f1f] border border-[#1e293b] rounded-lg px-4 py-3 flex items-start gap-3">
+              <span class="text-cyan-400 text-xs font-bold shrink-0 mt-0.5">🎯 沟通预案</span>
+              <p class="text-[#94a3b8] text-xs leading-relaxed">${c.preStrategy}</p>
+            </div>
           </div>
-        </div>
-        <div class="mt-4 bg-[#131b2f] rounded-lg px-4 py-3 flex items-start gap-3">
-          <span class="text-cyan-400 text-xs font-bold shrink-0 mt-0.5">🎯 沟通预案</span>
-          <p class="text-[#94a3b8] text-xs leading-relaxed">${c.preStrategy}</p>
         </div>`;
     }
 
