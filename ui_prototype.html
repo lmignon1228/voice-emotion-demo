@@ -396,14 +396,28 @@
     function renderCustomerDetail(c) {
       const el = document.getElementById('selectedCustomerDetail');
       if (!el) return;
-      const rc = c.risk || { level:'-', label:'待评估', color:'gray' };
+
+      // ===== 客户画像 mock 数据 =====
+      const profileMap = {
+        zhang: { age:42, gender:'男', product:'投资理财产品 10,000 元', riskLevel:'PR3', riskTolerance:'2.3', wealth:'黄金客户' },
+        li:    { age:35, gender:'女', product:'定期存款 500,000 元',   riskLevel:'PR2', riskTolerance:'1.5', wealth:'铂金客户' },
+        wang:  { age:45, gender:'男', product:'基金产品 200,000 元',    riskLevel:'PR4', riskTolerance:'4.1', wealth:'钻石客户' },
+        chen:  { age:28, gender:'男', product:'信用贷款 80,000 元',     riskLevel:'PR3', riskTolerance:'3.0', wealth:'黄金客户' },
+        liu:   { age:30, gender:'女', product:'活期理财 30,000 元',    riskLevel:'PR2', riskTolerance:'1.8', wealth:'铂金客户' },
+      };
+      const p = profileMap[c.id] || { age:'--', gender:'--', product:'--', riskLevel:'--', riskTolerance:'--', wealth:'--' };
+
+      // 将动态标签拼入原有 tags
+      const dynamicTags = [`${p.gender} · ${p.age}岁`, p.riskLevel, p.wealth];
+      const allTags = [...c.tags, ...dynamicTags];
+
       el.innerHTML = `
         <div class="flex items-start gap-5">
           <div class="customer-avatar-lg bg-gradient-to-br ${c.color} !border-0 !text-white">${c.avatar}</div>
           <div class="flex-1">
-            <div class="flex items-center gap-3 mb-2">
+            <div class="flex items-center gap-2 mb-2 flex-wrap">
               <span class="text-white text-lg font-bold">${c.name}</span>
-              ${c.tags.map(t => `<span class="text-xs bg-cyan-400/10 text-cyan-400 font-medium px-2 py-0.5 rounded">${t}</span>`).join('')}
+              ${allTags.map(t => `<span class="text-xs bg-cyan-400/10 text-cyan-400 font-medium px-2 py-0.5 rounded whitespace-nowrap">${t}</span>`).join('')}
               <span class="text-xs bg-[#1e293b] text-[#94a3b8] px-2 py-0.5 rounded">历史评分 ${c.score}</span>
             </div>
             <div class="grid grid-cols-3 gap-4 mt-3">
@@ -417,7 +431,26 @@
               </div>
               <div class="bg-[#131b2f] rounded-lg p-3 text-center">
                 <div class="text-[#64748b] text-[10px]">预期风险</div>
-                <div class="text-[#94a3b8] font-bold text-lg">--<span class="text-[#64748b] text-xs"></span></div>
+                <div class="text-[#94a3b8] font-bold text-lg">--</div>
+              </div>
+            </div>
+            <!-- 详细属性卡片 -->
+            <div class="mt-3 bg-[#131b2f] border border-[#1e293b] rounded-lg p-3 grid grid-cols-2 gap-x-6 gap-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-[#64748b] text-xs">持有产品</span>
+                <span class="text-white text-xs font-medium">${p.product}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-[#64748b] text-xs">风险承受力</span>
+                <span class="text-white text-xs font-medium">${p.riskTolerance}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-[#64748b] text-xs">${p.gender === '男' ? '先生' : '女士'} · 年龄</span>
+                <span class="text-white text-xs font-medium">${p.age} 岁</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-[#64748b] text-xs">财富等级</span>
+                <span class="text-xs font-medium ${p.wealth === '钻石客户' ? 'text-cyan-400' : p.wealth === '铂金客户' ? 'text-purple-400' : 'text-amber-400'}">${p.wealth}</span>
               </div>
             </div>
           </div>
